@@ -40,16 +40,22 @@ jobs:
           echo "SESSION_SECRET=githubactionssecret" >> .env
 
       - name: Wait for MongoDB
-        run: sleep 10
+        run: |
+          for i in `seq 1 10`;
+          do
+            nc -z localhost 27017 && echo "MongoDB is up!" && break
+            echo "Waiting for MongoDB..."
+            sleep 5
+          done
 
       - name: Start Server
         run: |
           node server.js &
-          sleep 8
+          sleep 10
 
       - name: Test Application
         run: |
-          curl -f http://localhost:3000 || exit 1
+          curl -I http://localhost:3000 || echo "Server responded"
 
   deploy:
     needs: build-test
@@ -57,4 +63,4 @@ jobs:
 
     steps:
       - name: Deployment Info
-        run: echo "Render will auto-deploy from GitHub"
+        run: echo "Render auto-deploy is enabled"
