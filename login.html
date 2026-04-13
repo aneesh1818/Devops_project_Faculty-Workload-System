@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FacultyIQ – Login</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/login.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+
+  <div class="login-box">
+    <div class="logo-mark">
+      <div class="logo-icon">🎓</div>
+      <div class="logo-text">Faculty<span>IQ</span></div>
+    </div>
+    <h1 class="login-title">Welcome back</h1>
+    <p class="login-sub">Sign in to your workload management portal</p>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="admin@university.edu" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <div class="field">
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <option value="admin">Admin / Dean</option>
+          <option value="hod">Head of Department</option>
+          <option value="faculty">Faculty Member</option>
+        </select>
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">
+        <span id="btnText">Sign In to Dashboard</span>
+        <span id="btnLoader" style="display:none;">Authenticating...</span>
+      </button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+
+    <div class="login-hint">
+      <p>Demo credentials</p>
+      <div class="hint-row">
+        <span class="hint-badge">admin@university.edu</span>
+        <span class="hint-badge">admin123</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/login.js"></script>
+</body>
+</html>
