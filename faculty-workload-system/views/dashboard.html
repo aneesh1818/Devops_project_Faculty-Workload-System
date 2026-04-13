@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FacultyIQ – Dashboard</title>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/dashboard.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🎓</div>
+    <div class="logo-text">Faculty<span>IQ</span></div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="#" class="nav-item active" data-view="dashboard">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a href="#" class="nav-item" data-view="faculty">
+        <span class="icon">👩‍🏫</span> Faculty Members
+        <span class="nav-badge" id="navFacultyCount">—</span>
+      </a>
+      <a href="#" class="nav-item" data-view="courses">
+        <span class="icon">📚</span> Courses
+      </a>
+      <a href="#" class="nav-item" data-view="schedule">
+        <span class="icon">🗓️</span> Schedule
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Management</div>
+      <a href="#" class="nav-item" data-view="workload">
+        <span class="icon">⚖️</span> Workload Analysis
+      </a>
+      <a href="#" class="nav-item" data-view="reports">
+        <span class="icon">📈</span> Reports
+      </a>
+      <a href="#" class="nav-item" data-view="settings">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="db-status">
+      <span class="db-dot"></span> MongoDB Connected
+    </div>
+    <div class="user-card">
+      <div class="user-avatar" id="sidebarAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Loading...</div>
+        <div class="user-role" id="sidebarRole">—</div>
+      </div>
+      <form action="/logout" method="POST" style="margin:0;">
+        <button type="submit" class="logout-btn" title="Logout">⏏</button>
+      </form>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main" id="mainContent">
+  <header class="topbar">
+    <div>
+      <div class="page-title" id="topbarTitle">Dashboard Overview</div>
+      <div class="page-sub" id="topbarSub">Smart Faculty Workload Management System</div>
+    </div>
+    <div class="topbar-right">
+      <div class="db-status"><span class="db-dot"></span> Live</div>
+      <button class="topbar-btn" onclick="refreshAll()">↻ Refresh</button>
+      <button class="topbar-btn primary" onclick="openModal('addFaculty')">+ Add Faculty</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ─── DASHBOARD VIEW ─── -->
+    <section id="view-dashboard" class="view active">
+      <div id="alertBanner"></div>
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon">👩‍🏫</div>
+          <div class="stat-value" id="stat-faculty">—</div>
+          <div class="stat-label">Total Faculty</div>
+          <div class="stat-delta up" id="stat-faculty-delta"></div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">📚</div>
+          <div class="stat-value" id="stat-courses">—</div>
+          <div class="stat-label">Active Courses</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" id="stat-overloaded">—</div>
+          <div class="stat-label">Overloaded Faculty</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">🕐</div>
+          <div class="stat-value" id="stat-avgload">—</div>
+          <div class="stat-label">Avg Weekly Hours</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Weekly Workload by Faculty</div>
+              <div class="card-sub">Teaching hours this week</div>
+            </div>
+            <span class="badge blue">Live</span>
+          </div>
+          <div class="bar-chart" id="barChart">
+            <div class="loading-placeholder">Loading chart data...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Department Distribution</div>
+              <div class="card-sub">Faculty by department</div>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <svg class="donut-svg" id="donutChart" viewBox="0 0 36 36"></svg>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Recent Alerts & Activity</div>
+            <div class="card-sub">System notifications</div>
+          </div>
+          <span class="badge green" id="systemStatus">All Systems Go</span>
+        </div>
+        <div id="activityFeed"></div>
+      </div>
+    </section>
+
+    <!-- ─── FACULTY VIEW ─── -->
+    <section id="view-faculty" class="view">
+      <div class="alert-banner warning" id="overloadAlert" style="display:none;">
+        ⚠️ <strong>Workload Alert:</strong> Some faculty are overloaded. Consider redistributing courses.
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="facultySearch" placeholder="Search by name or department..." oninput="loadFaculty()">
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Faculty Members</div>
+            <div class="card-sub">Stored in MongoDB faculty collection</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <select id="deptFilter" onchange="loadFaculty()" class="filter-select">
+              <option value="">All Departments</option>
+              <option>Computer Science</option>
+              <option>Mathematics</option>
+              <option>Physics</option>
+              <option>Chemistry</option>
+            </select>
+            <button class="topbar-btn primary" onclick="openModal('addFaculty')">+ Add Faculty</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Faculty</th>
+                <th>Department</th>
+                <th>Courses</th>
+                <th>Weekly Hours</th>
+                <th>Research</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="facultyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── COURSES VIEW ─── -->
+    <section id="view-courses" class="view">
+      <div class="section-header">
+        <div class="section-title">Course Management</div>
+        <button class="topbar-btn primary" onclick="openModal('addCourse')">+ Add Course</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Course Name</th>
+                <th>Credits</th>
+                <th>Students</th>
+                <th>Assigned To</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="courseTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SCHEDULE VIEW ─── -->
+    <section id="view-schedule" class="view">
+      <div class="section-header">
+        <div class="section-title">Weekly Schedule</div>
+        <span class="badge blue">Spring 2025</span>
+      </div>
+      <div class="card">
+        <div class="schedule-grid" id="scheduleGrid"></div>
+      </div>
+    </section>
+
+    <!-- ─── WORKLOAD VIEW ─── -->
+    <section id="view-workload" class="view">
+      <div class="section-title" style="margin-bottom:20px;">Workload Analysis</div>
+      <div class="workload-grid" id="workloadCards"></div>
+    </section>
+
+    <!-- ─── REPORTS VIEW ─── -->
+    <section id="view-reports" class="view">
+      <div class="section-title" style="margin-bottom:20px;">Reports & Analytics</div>
+      <div class="reports-grid" id="reportsGrid"></div>
+    </section>
+
+    <!-- ─── SETTINGS VIEW ─── -->
+    <section id="view-settings" class="view">
+      <div class="section-title" style="margin-bottom:20px;">System Settings</div>
+      <div class="card settings-card">
+        <div class="card-title" style="margin-bottom:20px;">Workload Thresholds</div>
+        <div class="field"><label>Min Weekly Hours (Underloaded)</label><input type="number" value="12" id="s-min" class="settings-input"></div>
+        <div class="field"><label>Max Weekly Hours (Overloaded)</label><input type="number" value="22" id="s-max" class="settings-input"></div>
+        <div class="field"><label>Max Courses per Faculty</label><input type="number" value="5" id="s-maxcourses" class="settings-input"></div>
+        <div class="field"><label>Institution Name</label><input type="text" value="University of Technology" id="s-inst" class="settings-input"></div>
+        <div class="field">
+          <label>Active Semester</label>
+          <select class="settings-input"><option>Spring 2025</option><option>Fall 2025</option></select>
+        </div>
+        <button class="btn primary" onclick="saveSettings()">Save Settings</button>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="modalConfirm">Save to Database</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/js/dashboard.js"></script>
+<script src="/js/faculty.js"></script>
+<script src="/js/courses.js"></script>
+<script src="/js/ui.js"></script>
+</body>
+</html>
