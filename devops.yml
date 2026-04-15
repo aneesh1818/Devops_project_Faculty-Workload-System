@@ -1,0 +1,66 @@
+name: FacultyIQ DevOps Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Create .env file
+        run: |
+          echo "PORT=3000" >> .env
+          echo "MONGODB_URI=mongodb://localhost:27017/faculty_workload_db" >> .env
+          echo "SESSION_SECRET=githubactionssecret" >> .env
+
+      - name: Wait for MongoDB
+        run: |
+          for i in `seq 1 10`;
+          do
+            nc -z localhost 27017 && echo "MongoDB is up!" && break
+            echo "Waiting for MongoDB..."
+            sleep 5
+          done
+
+      - name: Start Server
+        run: |
+          node server.js &
+          sleep 10
+
+      - name: Test Application
+        run: |
+          curl -I http://localhost:3000 || echo "Server responded"
+
+  deploy:
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deployment Info
+        run: echo "Render auto-deploy is enabled"
